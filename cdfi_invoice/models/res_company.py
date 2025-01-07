@@ -18,14 +18,14 @@ class ResCompany(models.Model):
     )
     api_key = fields.Char(string=_('API Key'))
     modo_prueba = fields.Boolean(string=_('Modo prueba'))
-    serie_factura = fields.Char(string=_('Serie factura'))
+    serie_factura = fields.Char(string=_('Serie factura')) #quitar en proxima revisión
     regimen_fiscal_id  =  fields.Many2one('catalogo.regimen.fiscal', string='Régimen Fiscal')
     archivo_cer = fields.Binary(string=_('Archivo .cer'))
     archivo_key = fields.Binary(string=_('Archivo .key'))
     contrasena = fields.Char(string=_('Contraseña'))
     nombre_fiscal = fields.Char(string=_('Razón social'))
-    serie_complemento = fields.Char(string=_('Serie complemento de pago'))
-    telefono_sms = fields.Char(string=_('Teléfono celular'))
+    serie_complemento = fields.Char(string=_('Serie complemento de pago')) #quitar en proxima revisión
+    telefono_sms = fields.Char(string=_('Teléfono celular')) #quitar en proxima revisión
     saldo_timbres =  fields.Float(string=_('Saldo de timbres'), readonly=True)
     saldo_alarma =  fields.Float(string=_('Alarma timbres'), default=10)
     correo_alarma =  fields.Char(string=_('Correo de alarma'))

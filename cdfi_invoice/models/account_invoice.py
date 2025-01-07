@@ -249,7 +249,7 @@ class AccountMove(models.Model):
 
         request_params = {
             'factura': {
-                'serie': self.journal_id.serie_diario or self.company_id.serie_factura,
+                'serie': str(re.sub(r'[0-9]+', '', self.name)).replace('/', ''),
                 'folio': str(re.sub('[^0-9]','', self.name)),
                 'fecha_expedicion': date_from,
                 'forma_pago': self.forma_pago_id.code,
@@ -273,15 +273,15 @@ class AccountMove(models.Model):
             'receptor': {
                 'nombre': nombre,
                 'rfc': self.partner_id.vat.upper() if self.partner_id.country_id.code == 'MX' else 'XEXX010101000',
-                'ResidenciaFiscal': self.partner_id.residencia_fiscal,
-                'NumRegIdTrib': self.partner_id.registro_tributario,
+                'ResidenciaFiscal': self.partner_id.country_id.codigo_mx if self.partner_id.country_id.code != 'MX' else '',
+                'NumRegIdTrib': self.partner_id.vat.upper() if self.partner_id.country_id.code != 'MX' else '',
                 'UsoCFDI': self.uso_cfdi_id.code,
                 'RegimenFiscalReceptor': self.partner_id.regimen_fiscal_id.code,
                 'DomicilioFiscalReceptor': zipreceptor,
             },
             'informacion': {
                 'cfdi': '4.0',
-                'sistema': 'odoo17',
+                'sistema': 'odoo18',
                 'version': '1',
                 'api_key': self.company_id.proveedor_timbrado,
                 'modo_prueba': self.company_id.modo_prueba,
@@ -488,6 +488,10 @@ class AccountMove(models.Model):
             components = []
             if line.product_id.product_parts_ids:
                 for component in line.product_id.product_parts_ids:
+                    if not component.product_id.clave_producto:
+                        raise UserError(_('El producto %s tiene un componente sin clave de producto.') % (line.product_id.name))
+                    if not component.product_id.name:
+                        raise UserError(_('El producto %s tiene un componente sin nombre.') % (line.product_id.name))
                     components.append({'ClaveProdServ': component.product_id.clave_producto,
                                       'Cantidad': component.cantidad,
                                       'Descripcion': self.clean_text(component.product_id.name),
@@ -645,6 +649,10 @@ class AccountMove(models.Model):
             self.write({'proceso_timbrado': False})
             self.env.cr.commit()
             raise UserError(_('El receptor no tiene nombre configurado.'))
+        if not self.partner_id.country_id:
+            self.write({'proceso_timbrado': False})
+            self.env.cr.commit()
+            raise UserError(_('El receptor no tiene un país configurado.'))
         if not self.uso_cfdi_id:
             self.write({'proceso_timbrado': False})
             self.env.cr.commit()
@@ -817,7 +825,7 @@ Si requiere timbrar la factura nuevamente deshabilite el checkbox de "Proceso de
                     'api_key': invoice.company_id.proveedor_timbrado,
                     'uuid': invoice.folio_fiscal,
                     'folio': invoice.name.replace('INV', '').replace('/', ''),
-                    'serie_factura': invoice.journal_id.serie_diario or invoice.company_id.serie_factura,
+                    'serie_factura': str(re.sub(r'[0-9]+', '', self.name)).replace('/', ''),
                     'modo_prueba': invoice.company_id.modo_prueba,
                     'certificados': {
                         #    'archivo_cer': archivo_cer.decode("utf-8"),
@@ -964,7 +972,7 @@ Si requiere timbrar la factura nuevamente deshabilite el checkbox de "Proceso de
                 'command': 'liberar_cfdi',
                 'rfc': invoice.company_id.vat,
                 'folio': str(re.sub('[^0-9]','', invoice.name)),
-                'serie_factura': invoice.journal_id.serie_diario or invoice.company_id.serie_factura,
+                'serie_factura': str(re.sub(r'[0-9]+', '', self.name)).replace('/', ''),
                 'archivo_cer': invoice.company_id.archivo_cer.decode("utf-8"),
                 'archivo_key': invoice.company_id.archivo_key.decode("utf-8"),
                 'contrasena': invoice.company_id.contrasena,

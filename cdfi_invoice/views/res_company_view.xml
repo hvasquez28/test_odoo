@@ -14,8 +14,8 @@
                             <group cols="4"  string="Configuración">
                                 <group>
                                     <field name="nombre_fiscal"/>
-                                    <field name="serie_factura"/>
-                                    <field name="serie_complemento"/>
+                                    <!--<field name="serie_factura"/>
+                                    <field name="serie_complemento"/>-->
                                     <field name="regimen_fiscal_id"/>
                                 </group>
                                 <group>
