@@ -94,8 +94,9 @@
 						</div>
 						<div class="col-4">
 							<div>
-								<strong>Serie y Folio:</strong>
-								<strong><span t-field="o.name" /></strong>
+								<strong>Folio:</strong>
+								<strong><span t-if="not o.company_id.serie_complemento=='false'" t-field="o.company_id.serie_complemento" /></strong>
+								<span t-field="o.folio" />
 							</div>
 							<div>
 								<strong>Fecha emisión: </strong>

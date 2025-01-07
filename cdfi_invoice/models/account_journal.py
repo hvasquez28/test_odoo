@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 from odoo import fields, models, api, _
 import pytz
@@ -15,5 +15,5 @@ class AccountJournal(models.Model):
     forma_pago_id  =  fields.Many2one('catalogo.forma.pago', string='Forma de pago')
     codigo_postal = fields.Char("Código Postal")
     tz = fields.Selection(_tz_get, string='Zona horaria', default=lambda self: self._context.get('tz'))
-    serie_diario = fields.Char("Serie")  #quitar en proxima revisión
+    serie_diario = fields.Char("Serie")
     company_cfdi = fields.Boolean(related="company_id.company_cfdi",store=True)

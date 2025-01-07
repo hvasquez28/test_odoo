@@ -11,7 +11,7 @@
                         <field name="company_cfdi" invisible="1"/>
                     </field>
                     <button name="action_post" position="after">
-                        <button name="complete_payment" class="oe_highlight" invisible="state not in ['paid', 'in_process'] or estado_pago in ['pago_correcto', 'factura_cancelada'] 
+                        <button name="complete_payment" class="oe_highlight" invisible="state != 'posted' or estado_pago in ['pago_correcto', 'factura_cancelada'] 
                                 or company_cfdi == False or payment_type == 'outbound'" string="Genera REP" type="object"/>
                         <button name="send_payment" class="oe_highlight" invisible="estado_pago != 'pago_correcto' or company_cfdi == False" 
                                 string="Enviar por correo-e" type="object"/>
@@ -21,8 +21,8 @@
                                 invisible="estado_pago in ['factura_cancelada','pago_no_enviado'] or company_cfdi == False or payment_type == 'outbound'" class="oe_highlight" groups="base.group_user"/>
                     </button>
                     <xpath expr="//sheet" position="inside">
-                        <notebook>
-                            <page name="info_cdfi" string="CFDI" invisible="state not in ['paid', 'in_process'] or company_cfdi == False">
+                        <notebook >
+                            <page name="info_cdfi" string="CFDI" invisible="state != 'posted' or company_cfdi == False">
                                     <group cols="4">
                                         <group string="Datos del comprobante">
                                             <field name="forma_pago_id" readonly="estado_pago != 'pago_no_enviado'"/>
@@ -74,14 +74,14 @@
                                     <group>
                                         <group string="Montos en moneda de la factura" colspan="4">
                                            <field name="partials_payment_ids" nolabel="1" colspan="4" readonly="estado_pago != 'pago_no_enviado'">
-                                              <list string="Montos de pago" editable="bottom">
+                                              <tree name ="montos_parciales" string="Montos de pago" editable="bottom">
                                                  <field name="facturas_id" domain="[('id', 'in',parent.reconciled_invoice_ids)]"/>
                                                  <field name="parcialidad"/>
                                                  <field name="imp_saldo_ant"/>
                                                  <field name="imp_pagado"/>
                                                  <field name="imp_saldo_insoluto"/>
                                                  <field name="equivalenciadr"/>
-                                              </list>
+                                              </tree>
                                            </field>
                                         </group>
                                     </group>
