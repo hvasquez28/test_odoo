@@ -15,4 +15,3 @@ from . import res_currency
 from . import uso_cfdi
 from . import regimen_fiscal
 from . import forma_pago
-from . import res_country
