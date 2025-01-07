@@ -104,7 +104,7 @@ class AccountPayment(models.Model):
     monedap = fields.Char(string=_('Moneda'))
     #    tipocambio = fields.Char(string=_('TipoCambio'))
     tipocambiop = fields.Char(string=_('TipoCambio'))
-    #folio = fields.Char(string=_('Folio'))
+    folio = fields.Char(string=_('Folio'))
     #  version = fields.Char(string=_('Version'))
     number_folio = fields.Char(string=_('Folio'), compute='_get_number_folio')
     amount_to_text = fields.Char('Amount to Text', compute='_get_amount_to_text',
@@ -336,7 +336,8 @@ class AccountPayment(models.Model):
                         rate_payment_curr_mxn = None
                         paid_amount_comp_curr = payment.amount
                     else:
-                        rate_payment_curr_mxn = payment.currency_id._convert(1.0, mxn_currency, payment.company_id, payment.date, round=False)
+                        rate_payment_curr_mxn = payment.currency_id._convert(1.0, mxn_currency, payment.company_id,
+                                                                             payment.date, round=False)
                         paid_amount_comp_curr = payment.currency_id.round(payment.amount * rate_payment_curr_mxn)
 
                     for match_field in ('credit', 'debit'):
@@ -595,7 +596,8 @@ class AccountPayment(models.Model):
                     trasladop.append({'ImpuestoP': line['ImpuestoP'],
                                       'TipoFactorP': line['TipoFactorP'],
                                       'TasaOCuotaP': line['TasaOCuotaP'],
-                                      'ImporteP': self.roundTraditional(line['ImporteP'], 2) if line['TipoFactorP'] != 'Exento' else '',
+                                      'ImporteP': self.roundTraditional(line['ImporteP'], 2) if line[
+                                                                                                    'TipoFactorP'] != 'Exento' else '',
                                       'BaseP': self.roundTraditional(line['BaseP'], 2),
                                       })
                     if line['ImpuestoP'] == '002' and line['TasaOCuotaP'] == '0.160000':
@@ -640,7 +642,7 @@ class AccountPayment(models.Model):
                 impuestosp.update({'RetencionesP': retencionp})
         totales.update({'MontoTotalPagos': self.set_decimals(self.amount,2) 
                                            if self.monedap == 'MXN' 
-                                           else self.selectRoundseparate(self.amount * float(self.tipocambiop), 2, self.redondeo_t_total), })
+                                           else self.selectRoundseparate(self.amount * float(self.tipocambiop), 2,  self.redondeo_t_total), })
         # totales.update({'MontoTotalPagos': self.set_decimals(self.total_pago, 2),})
 
         pagos = []
@@ -674,8 +676,8 @@ class AccountPayment(models.Model):
         if self.reconciled_invoice_ids:
             request_params = {
                 'factura': {
-                    'serie': str(re.sub(r'[0-9]+', '', self.name)).replace('/', '').replace('.', ''),
-                    'folio': str(re.sub('[^0-9]','', self.name)),
+                    'serie': self.journal_id.serie_diario or self.company_id.serie_complemento,
+                    'folio': self.name.replace('CUST.IN', '').replace('/', ''),
                     'fecha_expedicion': date_cfdi,
                     'subtotal': '0',
                     'moneda': 'XXX',
@@ -693,8 +695,8 @@ class AccountPayment(models.Model):
                 'receptor': {
                     'nombre': self.partner_id.name.upper(),
                     'rfc': self.partner_id.vat.upper(),
-                    'ResidenciaFiscal': self.partner_id.country_id.codigo_mx if self.partner_id.country_id.code != 'MX' else '',
-                    'NumRegIdTrib': self.partner_id.vat.upper() if self.partner_id.country_id.code != 'MX' else '',
+                    'ResidenciaFiscal': self.partner_id.residencia_fiscal,
+                    'NumRegIdTrib': self.partner_id.registro_tributario,
                     'UsoCFDI': 'CP01',
                     'RegimenFiscalReceptor': self.partner_id.regimen_fiscal_id.code,
                     'DomicilioFiscalReceptor': zipreceptor,
@@ -821,21 +823,20 @@ class AccountPayment(models.Model):
                     {
                         'name': xml_file_name,
                         'datas': json_response['pago_xml'],
-                     # 'datas_fname': xml_file_name,
+                        # 'datas_fname': xml_file_name,
                         'res_model': p._name,
                         'res_id': p.id,
                         'type': 'binary',
                         'mimetype': 'application/xml',
                         'description': _('Factura CFDI del documento %s.') % p.name,
                     })
-                if p.move_id:
-                   cfdi_format = p.env.ref('cdfi_invoice.edi_cfdi_4_0')
-                   edi_doc = p.env['account.edi.document'].sudo().create({
-                       'edi_format_id': cfdi_format.id,
-                       'state': 'sent',
-                       'move_id': p.move_id.id,
-                       'attachment_id': attach.id,
-                   })
+                cfdi_format = p.env.ref('cdfi_invoice.edi_cfdi_4_0')
+                edi_doc = p.env['account.edi.document'].sudo().create({
+                    'edi_format_id': cfdi_format.id,
+                    'state': 'sent',
+                    'move_id': p.move_id.id,
+                    'attachment_id': attach.id,
+                })
             p.write({'estado_pago': estado_pago,
                      'xml_payment_link': xml_file_link})
             p.message_post(body="CFDI emitido")
@@ -860,7 +861,7 @@ class AccountPayment(models.Model):
         self.selo_digital_cdfi = TimbreFiscalDigital.attrib['SelloCFD']
         self.selo_sat = TimbreFiscalDigital.attrib['SelloSAT']
         self.folio_fiscal = TimbreFiscalDigital.attrib['UUID']
-        #self.folio = xml_data.attrib['Folio']
+        self.folio = xml_data.attrib['Folio']
         version = TimbreFiscalDigital.attrib['Version']
         self.cadena_origenal = '||%s|%s|%s|%s|%s||' % (version, self.folio_fiscal, self.fecha_certificacion,
                                                        self.selo_digital_cdfi, self.cetificaso_sat)
@@ -945,8 +946,8 @@ class AccountPayment(models.Model):
                 'rfc': p.company_id.vat,
                 'api_key': p.company_id.proveedor_timbrado,
                 'uuid': p.folio_fiscal,
-                'folio': str(re.sub('[^0-9]','', p.name)),
-                'serie_factura': str(re.sub(r'[0-9]+', '', p.name)).replace('/', '').replace('.', ''),
+                'folio': p.folio,
+                'serie_factura': p.company_id.serie_complemento,
                 'modo_prueba': p.company_id.modo_prueba,
                 'certificados': {
                     'archivo_cer': archivo_cer,

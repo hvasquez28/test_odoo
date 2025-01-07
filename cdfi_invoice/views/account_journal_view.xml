@@ -13,7 +13,7 @@
                                       <field name="forma_pago_id" invisible="type not in ['cash', 'bank']" />
                                       <field name="codigo_postal" invisible="type not in ['sale','cash', 'bank']"/>
                                       <field name="tz" readonly="0" invisible="type not in ['sale','cash', 'bank']"/>
-                                      <!--<field name="serie_diario" invisible="type not in ['sale','cash', 'bank']"/>-->
+                                      <field name="serie_diario" invisible="type not in ['sale','cash', 'bank']"/>
                                 </group>
                             </group>
                     </page>
