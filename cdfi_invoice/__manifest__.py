@@ -48,4 +48,5 @@
     'price': 0.00,
     'currency': 'USD',
     'license': 'OPL-1',
+    'test': False,
 }
